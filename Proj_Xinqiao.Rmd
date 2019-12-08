@@ -1,0 +1,355 @@
+---
+title: "MA678 Project"
+author: "Xinqiao Zhang"
+date: "11/30/2019"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, out.width="0.9\\linewidth",dev="pdf",fig.align  = 'center')
+pacman::p_load(
+  "tidyverse",
+  "spotifyr",
+  "ggplot2", 
+  "httr", 
+  "RColorBrewer", 
+  "coefplot", 
+  "lme4"
+)
+```
+
+
+
+## Introduction   
+### Background  
+\qquad Nowadays, we listen to music when we are working out, behind the wheel or partying. As one of the largest music streaming company in the world, Spotify has taken part not only in streaming but also in helping publish music for artists.   
+\qquad Consequently, Spotify recorded its own streaming and created a charts of all the streaming data via Spotify.     
+
+```{r, fig.align = "center", echo=FALSE, message= FALSE, warning=FALSE}
+knitr::include_graphics("~/Desktop/BU/MA678/MT Proj/Music for everyone.png")
+```
+
+### Task  
+\qquad My personal interest is that, what it would take for a song to be a hit. That is, what kind of audio features would affect the streaming of a song.   
+
+
+## Data  
+### Charts   
+\qquad On the website https://spotifycharts.com/regional, Spotify shared their data for the top streamed songs in a certain peroid of time(week or day), in a certain market(global, US, UK, etc) and on a scale of top 200 songs or top 50.   
+\qquad I took the top 200 charts from the US market in the latest 20 weeks and take the average of the stream of each track by week. It is possible for some tracks to lose their position in the top 200 and some other tracks to raise to such position. Hence it would be possible to average out the streaming instead of adding up. 
+
+```{r, chart compile}
+data1<- read.csv("~/Desktop/BU/MA678/MT Proj/Stream/regional-us-weekly-2019-07-12--2019-07-19.csv")
+names(data1)<- lapply(data1[1,], as.character)
+data1 <- data1[-1, ]
+
+data2<- read.csv("~/Desktop/BU/MA678/MT Proj/Stream/regional-us-weekly-2019-07-19--2019-07-26.csv")
+names(data2)<- lapply(data2[1,], as.character)
+data2 <- data2[-1, ]
+
+data3<- read.csv("~/Desktop/BU/MA678/MT Proj/Stream/regional-us-weekly-2019-07-26--2019-08-02.csv")
+names(data3)<- lapply(data3[1,], as.character)
+data3 <- data3[-1, ]
+
+data4<- read.csv("~/Desktop/BU/MA678/MT Proj/Stream/regional-us-weekly-2019-08-02--2019-08-09.csv")
+names(data4)<- lapply(data4[1,], as.character)
+data4 <- data4[-1, ]
+
+data5<- read.csv("~/Desktop/BU/MA678/MT Proj/Stream/regional-us-weekly-2019-08-09--2019-08-16.csv")
+names(data5)<- lapply(data5[1,], as.character)
+data5 <- data5[-1, ]
+
+data6<- read.csv("~/Desktop/BU/MA678/MT Proj/Stream/regional-us-weekly-2019-08-16--2019-08-23.csv")
+names(data6)<- lapply(data6[1,], as.character)
+data6 <- data6[-1, ]
+
+data7<- read.csv("~/Desktop/BU/MA678/MT Proj/Stream/regional-us-weekly-2019-08-23--2019-08-30.csv")
+names(data7)<- lapply(data7[1,], as.character)
+data7 <- data7[-1, ]
+
+data8<- read.csv("~/Desktop/BU/MA678/MT Proj/Stream/regional-us-weekly-2019-08-30--2019-09-06.csv")
+names(data8)<- lapply(data8[1,], as.character)
+data8 <- data8[-1, ]
+
+data9<- read.csv("~/Desktop/BU/MA678/MT Proj/Stream/regional-us-weekly-2019-09-06--2019-09-13.csv")
+names(data9)<- lapply(data9[1,], as.character)
+data9 <- data9[-1, ]
+
+data10<- read.csv("~/Desktop/BU/MA678/MT Proj/Stream/regional-us-weekly-2019-09-13--2019-09-20.csv")
+names(data10)<- lapply(data10[1,], as.character)
+data10 <- data10[-1, ]
+
+data11<- read.csv("~/Desktop/BU/MA678/MT Proj/Stream/regional-us-weekly-2019-09-20--2019-09-27.csv")
+names(data11)<- lapply(data11[1,], as.character)
+data11 <- data11[-1, ]
+
+data12<- read.csv("~/Desktop/BU/MA678/MT Proj/Stream/regional-us-weekly-2019-09-27--2019-10-04.csv")
+names(data12)<- lapply(data12[1,], as.character)
+data12 <- data12[-1, ]
+
+data13<- read.csv("~/Desktop/BU/MA678/MT Proj/Stream/regional-us-weekly-2019-10-04--2019-10-11.csv")
+names(data13)<- lapply(data13[1,], as.character)
+data13 <- data13[-1, ]
+
+data14<- read.csv("~/Desktop/BU/MA678/MT Proj/Stream/regional-us-weekly-2019-10-11--2019-10-18.csv")
+names(data14)<- lapply(data14[1,], as.character)
+data14 <- data14[-1, ]
+
+data15<- read.csv("~/Desktop/BU/MA678/MT Proj/Stream/regional-us-weekly-2019-10-18--2019-10-25.csv")
+names(data15)<- lapply(data15[1,], as.character)
+data15 <- data15[-1, ]
+
+data16<- read.csv("~/Desktop/BU/MA678/MT Proj/Stream/regional-us-weekly-2019-10-25--2019-11-01.csv")
+names(data16)<- lapply(data16[1,], as.character)
+data16 <- data16[-1, ]
+
+data17<- read.csv("~/Desktop/BU/MA678/MT Proj/Stream/regional-us-weekly-2019-11-01--2019-11-08.csv")
+names(data17)<- lapply(data17[1,], as.character)
+data17 <- data17[-1, ]
+
+data18<- read.csv("~/Desktop/BU/MA678/MT Proj/Stream/regional-us-weekly-2019-11-08--2019-11-15.csv")
+names(data18)<- lapply(data18[1,], as.character)
+data18 <- data18[-1, ]
+
+data19<- read.csv("~/Desktop/BU/MA678/MT Proj/Stream/regional-us-weekly-2019-11-15--2019-11-22.csv")
+names(data19)<- lapply(data19[1,], as.character)
+data19 <- data19[-1, ]
+
+data20<- read.csv("~/Desktop/BU/MA678/MT Proj/Stream/regional-us-weekly-2019-11-22--2019-11-29.csv")
+names(data20)<- lapply(data20[1,], as.character)
+data20 <- data20[-1, ]
+
+
+spotify_raw<- rbind(data1, data2, data3, data4, data5, data6, data7, data8, data9, data10, data11, data12, data13, data14, data15, data16, data17, data18, data19, data20)
+```
+
+```{r}
+spotify_raw$Streams<- as.character(spotify_raw$Streams)
+spotify_raw$Streams<- as.numeric(spotify_raw$Streams)
+
+### Group data by averaging the weekly streams. 
+spotify_raw_1<- spotify_raw %>% group_by(URL) %>% summarise(weekly.stream=mean(Streams))
+### However, the data generated does not have the track name and artist name with it. Hence it would be important to add them. 
+spotify_raw_2<- spotify_raw
+spotify_raw_2<- subset(spotify_raw_2, select= -c(1,4))
+spotify_raw_3<- unique(spotify_raw_2[])
+spotify_raw_4<- merge(x=spotify_raw_1, y=spotify_raw_3, by.x="URL", by.y="URL")
+### Also deleted the "position" and the original "Streams" variables because we would no longer need them in the later study. 
+```
+\qquad This step would returned us only 678 tracks which means there were 678 different songs been in Spotify top 200 chart in the US market in the past 20 weeks.   
+
+
+#### Audio Features  
+\qquad From the Spotify Charts website, we could only acquire the streams of track. Now we would move to Spotify API to get more features of the tracks.   
+
+```{r, spotify client access}
+## Use Spotify client account to get access. 
+id="9e21d08659954e1ebec5abea075257b9"
+secret="a46db70a6339480d99da5e5badc32b6e"
+Sys.setenv(SPOTIFY_CLIENT_ID = id)
+Sys.setenv(SPOTIFY_CLIENT_SECRET = secret)
+access_token<- get_spotify_access_token()
+```
+
+\qquad Then we can use the Spotify Developer platform to exctract the data for audio features of the tracks in the list before.   
+
+```{r, get audio features}
+spotify_raw_4$track.id<- substring(spotify_raw_4$URL, 32)
+## Since the get track audio features function in spotifyr package can only extract a maximum of 100 tracks at a time, we have to do it separately. 
+spotify_1<- get_track_audio_features(spotify_raw_4$track.id[1:100])
+spotify_2<- get_track_audio_features(spotify_raw_4$track.id[101:200])
+spotify_3<- get_track_audio_features(spotify_raw_4$track.id[201:300])
+spotify_4<- get_track_audio_features(spotify_raw_4$track.id[301:400])
+spotify_5<- get_track_audio_features(spotify_raw_4$track.id[401:500])
+spotify_6<- get_track_audio_features(spotify_raw_4$track.id[501:600])
+spotify_7<- get_track_audio_features(spotify_raw_4$track.id[601:678])
+
+spotify_data<- rbind(spotify_1, spotify_2, spotify_3, spotify_4, spotify_5, spotify_6, spotify_7)
+```
+
+
+
+
+## Data Cleaning  
+### There we have the audio features of those tracks and streams as well. Hence we could join the two tables together.   
+```{r}
+spotify_data<- cbind(spotify_data, spotify_raw_4)
+```
+
+```{r}
+length(unique(spotify_data$type))
+```
+\qquad We noticed that there is only one entry in the column "type", so we will exclude that column from the data.   
+\qquad Also, the columns "uri", "track_href", "analysis_url" and "URL" would be excessive in our analysis, so we would exclude those columns as well.  
+\qquad Finally, the column "id" and ""track.id" are duplicates from the precedure of merging two dataset together. Hence we should delete one of them. 
+
+```{r}
+data_spotify<- spotify_data[-c(12, 14, 15, 16, 19, 23)]
+```
+
+
+### Variable Explanation   
+\qquad For the data we have obtained, there are 1 outcome variable, 13 predictors and 3 identification features.   
+
+Variables| Category | Explanation
+-------|--------|--------------------------------
+danceability | indicator | Danceability describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity. A value of 0.0 is least danceable and 1.0 is most danceable.   
+energy | indicator | Energy is a measure from 0.0 to 1.0 and represents a perceptual measure of intensity and activity. Typically, energetic tracks feel fast, loud, and noisy. For example, death metal has high energy, while a Bach prelude scores low on the scale. Perceptual features contributing to this attribute include dynamic range, perceived loudness, timbre, onset rate, and general entropy.   
+key | indicator | The estimated overall key of the track. Integers map to pitches using standard Pitch Class notation . E.g. 0 = C, 1 = C♯/D♭, 2 = D, and so on. If no key was detected, the value is -1.
+loudness | indicator | The overall loudness of a track in decibels (dB). Loudness values are averaged across the entire track and are useful for comparing relative loudness of tracks. Loudness is the quality of a sound that is the primary psychological correlate of physical strength (amplitude). Values typical range between -60 and 0 db.   
+mode | indicator | Mode indicates the modality (major or minor) of a track, the type of scale from which its melodic content is derived. Major is represented by 1 and minor is 0.  
+speechiness | indicator | Speechiness detects the presence of spoken words in a track. The more exclusively speech-like the recording (e.g. talk show, audio book, poetry), the closer to 1.0 the attribute value. Values above 0.66 describe tracks that are probably made entirely of spoken words. Values between 0.33 and 0.66 describe tracks that may contain both music and speech, either in sections or layered, including such cases as rap music. Values below 0.33 most likely represent music and other non-speech-like tracks.  
+acousticness | indicator | A confidence measure from 0.0 to 1.0 of whether the track is acoustic. 1.0 represents high confidence the track is acoustic.   
+instrumentalness | indicator | Predicts whether a track contains no vocals. “Ooh” and “aah” sounds are treated as instrumental in this context. Rap or spoken word tracks are clearly “vocal”. The closer the instrumentalness value is to 1.0, the greater likelihood the track contains no vocal content. Values above 0.5 are intended to represent instrumental tracks, but confidence is higher as the value approaches 1.0.   
+liveness | indicator | Detects the presence of an audience in the recording. Higher liveness values represent an increased probability that the track was performed live. A value above 0.8 provides strong likelihood that the track is live.   
+valence | indicator | A measure from 0.0 to 1.0 describing the musical positiveness conveyed by a track. Tracks with high valence sound more positive (e.g. happy, cheerful, euphoric), while tracks with low valence sound more negative (e.g. sad, depressed, angry).   
+tempo | indicator | The overall estimated tempo of a track in beats per minute (BPM). In musical terminology, tempo is the speed or pace of a given piece and derives directly from the average beat duration.   
+id | identification | The Spotify ID for the track.  
+duration_ms | indicator | The duration of the track in milliseconds.  
+time_signature | indicator | An estimated overall time signature of a track. The time signature (meter) is a notational convention to specify how many beats are in each bar (or measure).  
+weekly.stream | outcome | The mean of streams of a track for the weeks that the track has made to the top 200 charts in US Spotify market on a weekly basis.  
+Track Name | identification | The name of the track.  
+Artist | identification | The name of the artist.  
+
+
+
+## Exploratory Data Analysis  
+
+```{r, EDA}
+hist_1<- ggplot(data_spotify, aes(x=danceability)) + 
+  geom_histogram(binwidth=0.01, col="black", fill="purple", position="dodge") + 
+  labs(title="Histogram for Danceability", x="Danceability", y="Count")
+hist_2<- ggplot(data_spotify, aes(x=energy)) + 
+  geom_histogram(binwidth=0.01, col="black", fill="red", position="dodge") + 
+  labs(title="Histogram for Energy", x="Energy", y="Count")
+hist_3<- ggplot(data_spotify, aes(x=loudness)) + 
+  geom_histogram(binwidth=0.1, col="black", fill="green", position="dodge") + 
+  labs(title="Histogram for Loudness", x="Loudness", y="Count")
+hist_4<- ggplot(data_spotify, aes(x=speechiness)) + 
+  geom_histogram(binwidth=0.01, col="black", fill="blue", position="dodge") + 
+  labs(title="Histogram for Speechiness", x="Speechiness", y="Count")
+hist_5<- ggplot(data_spotify, aes(x=acousticness)) + 
+  geom_histogram(binwidth=0.01, col="white", fill="green", position="dodge") + 
+  labs(title="Histogram for Acousticness", x="Acousticness", y="Count")
+hist_6<- ggplot(data_spotify, aes(x=liveness)) + 
+  geom_histogram(binwidth=0.01, col="white", fill="red", position="dodge") + 
+  labs(title="Histogram for Liveness", x="Liveness", y="Count")
+hist_7<- ggplot(data_spotify, aes(x=valence)) + 
+  geom_histogram(binwidth=0.01, col="black", fill="yellow", position="dodge") + 
+  labs(title="Histogram for Valence", x="Valence", y="Count")
+hist_8<- ggplot(data_spotify, aes(x=tempo)) + 
+  geom_histogram(binwidth=2, col="white", fill="black", position="dodge") + 
+  labs(title="Histogram for Tempo", x="Tempo", y="Count")
+hist_9<- ggplot(data_spotify, aes(x=duration_ms)) + 
+  geom_histogram(binwidth=1000, col="black", fill="white", position="dodge") + 
+  labs(title="Histogram for Duration", x="Duration", y="Count") + 
+  scale_x_continuous(element_blank(),  limits = c(0, 400000), expand = c(0, 0))
+```
+
+```{r , fig.height=3, fig.width=8}
+gridExtra::grid.arrange(hist_1, hist_2, ncol=2)
+summary(data_spotify$danceability)
+summary(data_spotify$energy)
+```
+\qquad From the histogram of the frequency of danceability, we can see that the data is roughly normally distributed from 0.2 to 1.0. The mean of the variable is 0.690.   
+\qquad From the histogram of the frequency of energy, we can see that the data is roughly normally distributed from 0.0 to 1.0. The mean of the variable is 0.6075.   
+```{r , fig.height=3, fig.width=8}
+gridExtra::grid.arrange(hist_3, hist_4, ncol=2)
+```
+\qquad From the histogram of loudness, it is hard to specify the distribution of this variable because it was scattered out in the range but more densed around -8.0 to -3. 
+\qquad From the histogram of speechiness, we could observe a heavy tail on the right. This is reasonable because most of the songs would not include a heavy portion of speech. Those with relatively higher speechiness would be more likely to be rap music. The distribution is not normal.   
+```{r , fig.height=3, fig.width=8}
+gridExtra::grid.arrange(hist_5, hist_6, ncol=2)
+```
+\qquad From the histogram of acousticness, we could also observe a heavy tail on the right. This is also true because the beats of the most of the tracks were now produced digitally rather than acousticly. Higher acousticness indicates heavier portion of acoustic instruments. The distribution is laso not normal.   
+\qquad Histogram of livenes also indicates overall low presence of audience. This graph is also skewed and the distribution is not normal.   
+```{r , fig.height=3, fig.width=8}
+gridExtra::grid.arrange(hist_7, hist_8, ncol=2)
+summary(data_spotify$valence)
+summary(data_spotify$tempo)
+```
+\qquad From the histogram of the frequency of valence, we can see that the data is roughly normally distributed from 0.3 to 1.0. The mean of the variable is 0.4832.   
+\qquad From the histogram of the frequency of tempo, it is harder to say that the data is normally distributed because the range is from 67 to 208.   
+```{r , fig.height=3, fig.width=8}
+gridExtra::grid.arrange(hist_9, ncol=2)
+```
+\qquad The variable duration was roughly normally distributed in the range shown in the graph. However, it has a lighter tail to the right, which indicates the rare long tracks.   
+
+
+```{r}
+hist(data_spotify$key)
+ggplot(data_spotify, aes(x=key)) + 
+  geom_histogram(binwidth = 1, col="black", fill="blue", position="dodge") + 
+  labs(title="Histogram for Key", x="Key", y="Count")
+summary(data_spotify$key)
+```
+\qquad From the graph we can see that the keys are distributed thoughout the octave and notive that when key=3(D♯/E♭), there is a drop in the graph indicating this key is least used in the top 200 charts.   
+
+
+## Models Fitting  
+### Model 1  
+\qquad The first model used is a basic linear moedl to obtain a basic idea on the reaction of the outcome to the variables we have.   
+```{r}
+fit1<- lm(log(weekly.stream) ~ danceability + energy + key + loudness + mode + speechiness + acousticness + instrumentalness + liveness + valence + tempo + duration_ms, data_spotify)
+summary(fit1)
+```
+\qquad From the basi linear regression model, we can see that loudness and duration have the lowest p-value, indicating strong evidence of that those two variables should present in the model. However, the coefficient of duration is relatively small, even if we take second as unit instead of millisecond, the coefficient would only change from -1.367e-06 to -1.367e-03. This is reasonable because the popularity of a track should not be affected by the length of it too much.  
+\qquad Also, it was surprising that the variable mode has a negative coefficient which means that a track with key on major mode would be less streamed comparing to one with key on minor mode, ceteris paribus.   
+
+```{r}
+fit1_2<- lm(log(weekly.stream) ~ danceability + energy + loudness + mode + instrumentalness + duration_ms, data_spotify)
+summary(fit1_2)
+```
+\qquad With the adjusted model, we can see that all variables have evidences in different significant level to affect the streams.  
+
+
+### Model 2  
+\qquad The second model I used is the generalized linear regression model.    
+```{r}
+fit2<- glm(log(weekly.stream) ~ danceability + energy + loudness + mode + instrumentalness + duration_ms, data_spotify, family="gaussian")
+summary(fit2)
+coefplot(fit2)
+plot(fit2)
+```
+\qquad In this model, we have a better view of the coefficients of the variables and as I mentioned before, the coefficient for duration_ms is small but still significant.  
+\qquad From this plots, we can tell that the residual plot is in good shape.  
+
+### Model 3   
+\qquad Now we would fit a multi-level model on loudness, which was significant from the model we had in glm.   
+```{r}
+fit3_1<- lmer(log(weekly.stream) ~ (1|danceability) + (1|instrumentalness) + loudness + (1|energy), data_spotify)
+summary(fit3_1)
+plot(fit3_1)
+```
+\qquad The multilevel model on loudness gave us a good result on the variable itself.   
+\qquad Now we add the effect of key into the model. Key was a parameter insignificant in the models before. However, it could group the data into 12 different tunes and gave us a clearer idea on the model.  
+```{r, warning=FALSE, messgae=FALSE}
+fit3_2<- lmer(log(weekly.stream) ~ (danceability|key) + (1|instrumentalness) + loudness + (energy|key), data_spotify)
+summary(fit3_2)
+plot(fit3_2)
+```
+\qquad From my point of view, key would affect the daceability and energy. After adding this to the model, the residual plot looks more densed.   
+```{r, warning=FALSE, messgae=FALSE}
+anova(fit3_1, fit3_2)
+```
+\qquad From the ANOVA of the two multilevel models, we can see that the first model has lower AIC and BIC values. Therefore the effect of keys should not be added to the model and thus *fit3_1* is a better fit for the data.    
+
+## Discussion  
+### Implication   
+\qquad The result from the models were not excatly what we expected from the beginning. It was surprising that loudness of a track could affect the popularity that much. The result from the basic linear regression was intuitive but might not be accurate. However, the results were satisfying in terms of anova and residual plots.   
+### Limitation  
+\qquad I think the limitation of the data is stopping the models from being outstanding. I could only acquire at most top 200 from the spotify charts website and the audio features were subjective in some sense. For instance, danceability might be common for people to accept, but the scaling could be subjective and thus biased.   
+### Future Direction  
+\qquad I think I will be acquiring more data from other platforms with more features and thus could improve the model and this project. Personally, I produced my own music during my free time, so it would also be important to understand the taste of the audience.    
+
+
+
+## Reference 
+[1]Spotify Streaming Charts. https://spotifycharts.com/regional  
+[2]Explanation for variables from Spotify API data. https://developer.spotify.com/documentation/web-api/reference/tracks/get-audio-features/  
+[3]Spotify logo picture. https://www.spotify.com/us/  
+
+
+
