@@ -279,7 +279,6 @@ gridExtra::grid.arrange(hist_9, ncol=2)
 
 
 ```{r}
-hist(data_spotify$key)
 ggplot(data_spotify, aes(x=key)) + 
   geom_histogram(binwidth = 1, col="black", fill="blue", position="dodge") + 
   labs(title="Histogram for Key", x="Key", y="Count")
@@ -293,14 +292,14 @@ summary(data_spotify$key)
 \qquad The first model used is a basic linear moedl to obtain a basic idea on the reaction of the outcome to the variables we have.   
 ```{r}
 fit1<- lm(log(weekly.stream) ~ danceability + energy + key + loudness + mode + speechiness + acousticness + instrumentalness + liveness + valence + tempo + duration_ms, data_spotify)
-summary(fit1)
+
 ```
 \qquad From the basi linear regression model, we can see that loudness and duration have the lowest p-value, indicating strong evidence of that those two variables should present in the model. However, the coefficient of duration is relatively small, even if we take second as unit instead of millisecond, the coefficient would only change from -1.367e-06 to -1.367e-03. This is reasonable because the popularity of a track should not be affected by the length of it too much.  
 \qquad Also, it was surprising that the variable mode has a negative coefficient which means that a track with key on major mode would be less streamed comparing to one with key on minor mode, ceteris paribus.   
 
 ```{r}
 fit1_2<- lm(log(weekly.stream) ~ danceability + energy + loudness + mode + instrumentalness + duration_ms, data_spotify)
-summary(fit1_2)
+
 ```
 \qquad With the adjusted model, we can see that all variables have evidences in different significant level to affect the streams.  
 
@@ -309,7 +308,7 @@ summary(fit1_2)
 \qquad The second model I used is the generalized linear regression model.    
 ```{r}
 fit2<- glm(log(weekly.stream) ~ danceability + energy + loudness + mode + instrumentalness + duration_ms, data_spotify, family="gaussian")
-summary(fit2)
+
 coefplot(fit2)
 plot(fit2)
 ```
@@ -320,27 +319,27 @@ plot(fit2)
 \qquad Now we would fit a multi-level model on loudness, which was significant from the model we had in glm.   
 ```{r}
 fit3_1<- lmer(log(weekly.stream) ~ (1|danceability) + (1|instrumentalness) + loudness + (1|energy), data_spotify)
-summary(fit3_1)
+
 plot(fit3_1)
 ```
 \qquad The multilevel model on loudness gave us a good result on the variable itself.   
 \qquad Now we add the effect of key into the model. Key was a parameter insignificant in the models before. However, it could group the data into 12 different tunes and gave us a clearer idea on the model.  
-```{r, warning=FALSE, messgae=FALSE}
+```{r, warning=FALSE, message=FALSE}
 fit3_2<- lmer(log(weekly.stream) ~ (danceability|key) + (1|instrumentalness) + loudness + (energy|key), data_spotify)
-summary(fit3_2)
+
 plot(fit3_2)
 ```
 \qquad From my point of view, key would affect the daceability and energy. After adding this to the model, the residual plot looks more densed.   
-```{r, warning=FALSE, messgae=FALSE}
-anova(fit3_1, fit3_2)
-```
+
 \qquad From the ANOVA of the two multilevel models, we can see that the first model has lower AIC and BIC values. Therefore the effect of keys should not be added to the model and thus *fit3_1* is a better fit for the data.    
 
 ## Discussion  
 ### Implication   
-\qquad The result from the models were not excatly what we expected from the beginning. It was surprising that loudness of a track could affect the popularity that much. The result from the basic linear regression was intuitive but might not be accurate. However, the results were satisfying in terms of anova and residual plots.   
+\qquad The result from the models were not excatly what we expected from the beginning. It was surprising that loudness of a track could affect the popularity that much. The result from the basic linear regression was intuitive but might not be accurate. However, the results were satisfying in terms of anova and residual plots.    
+
 ### Limitation  
-\qquad I think the limitation of the data is stopping the models from being outstanding. I could only acquire at most top 200 from the spotify charts website and the audio features were subjective in some sense. For instance, danceability might be common for people to accept, but the scaling could be subjective and thus biased.   
+\qquad I think the limitation of the data is stopping the models from being outstanding. I could only acquire at most top 200 from the spotify charts website and the audio features were subjective in some sense. For instance, danceability might be common for people to accept, but the scaling could be subjective and thus biased.    
+
 ### Future Direction  
 \qquad I think I will be acquiring more data from other platforms with more features and thus could improve the model and this project. Personally, I produced my own music during my free time, so it would also be important to understand the taste of the audience.    
 
@@ -351,5 +350,28 @@ anova(fit3_1, fit3_2)
 [2]Explanation for variables from Spotify API data. https://developer.spotify.com/documentation/web-api/reference/tracks/get-audio-features/  
 [3]Spotify logo picture. https://www.spotify.com/us/  
 
-
-
+## Appendix  
+[1] Summary for simple linear model.  
+```{r, warning=FALSE, message=FALSE}
+summary(fit1)
+```
+[2]Summary for adjusted linear model.   
+```{r, warning=FALSE, message=FALSE}
+summary(fit1_2)
+```
+[3]Summary for GLM.   
+```{r, warning=FALSE, message=FALSE}
+summary(fit2)
+```
+[4]Summary for the first multilevel model.  
+```{r, warning=FALSE, message=FALSE}
+summary(fit3_1)
+```
+[5]Summary for the second multilevel model.  
+```{r, warning=FALSE, message=FALSE}
+summary(fit3_2)
+``` 
+[6]Anova comparison of both multilevel models.   
+```{r, warning=FALSE, message=FALSE}
+anova(fit3_1, fit3_2)
+```
